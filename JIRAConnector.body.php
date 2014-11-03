@@ -8,7 +8,7 @@
  * 
  */
 class JIRAConnector {
-	
+
 	//Parser parameters names.
 	const parserParameterJIRAKey = "jiraissuekey";
 	
@@ -16,19 +16,16 @@ class JIRAConnector {
 	const JIRAIssueKey = "key";
 	const JIRAIssueStatus = "status";
 	
-	//Temporary: Define JIRA access data.
-	const JIRAUserName = "username";
-	const JIRAUserPassword = "password";
-	const JIRAEndpoint = "http://localhost:8080";
-	
 	//JIRA REST API Wrapper.
 	protected static $jiraWrapper = null;
 	
 	// Register parser functions at MediaWiki.
 	public static function RegisterParserFunctions( &$parser ) {
 
+		global $jiraURL, $jiraUsername, $jiraPassword;
+
 		//Create JIRA wrapper.
-		JIRAConnector::$jiraWrapper = new JIRARestApiWrapper(JIRAConnector::JIRAEndpoint,JIRAConnector::JIRAUserName,JIRAConnector::JIRAUserPassword);
+		JIRAConnector::$jiraWrapper = new JIRARestApiWrapper($jiraURL,$jiraUsername,$jiraPassword);
 		
 		//Map parser function ReadJIRAIssue to the magic word readjiraissue.
 		$parser->setFunctionHook( 'readjiraissue', 'JIRAConnector::ReadJIRAIssue' );
