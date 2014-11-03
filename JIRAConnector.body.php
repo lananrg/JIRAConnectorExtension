@@ -131,16 +131,21 @@ class JIRARestApiWrapper{
 	 */
 	protected function getRESTData($dataURL){
 		
-		//Encode credentials as base 64.
-		$credentialsEncoded = base64_encode( $this->userName . ":" . $this->userPassword );
-		
+		$headers = array();
+		$headers[] = "Accept: application/json";
+		$headers[] = "Content-Type: application/json";
+
+		if (!is_null($this->userName)) {
+			//Encode credentials as base 64.
+			$credentialsEncoded = base64_encode( $this->userName . ":" . $this->userPassword );			
+			$headers[] = $credentialsEncoded;
+		}
+
 		//Define context options.
 		$opts = array(
 				'http'=>array(
 						'method'=>"GET",
-						'header'=> array (	//"Accept: application/json",
-											"Authorization: Basic $credentialsEncoded",
-											"Content-Type: application/json" )
+						'header'=> $headers
 				)
 		);
 		
