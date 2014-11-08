@@ -108,7 +108,15 @@ class JIRAConnector {
 			$summary = $jiraIssue["fields"][JIRAConnector::JIRAIssueSummary];
 			$output .= "<tr>";
 			$output .= "<td><img src=\"$issueTypeIcon\"/></td>";
-			$output .= "<td><a href=\"$issueURL\">$issueKey</a></td>";
+			$output .= "<td><a href=\"$issueURL\">";
+			if ($issueStatus == "Resolved") {
+				$output .= "<strike>"	;
+			}
+			$output .= $issueKey;
+			if ($issueStatus == "Resolved") {
+				$output .= "</strike>";
+			}
+			$output .= "</a></td>";
 			$output .= "<td>$summary</td>";
 			$output .= "</tr>";
 		}
