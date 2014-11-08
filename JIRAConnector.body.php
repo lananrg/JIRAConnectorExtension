@@ -31,7 +31,7 @@ class JIRAConnector {
 		
 		//Map parser function ReadJIRAIssue to the magic word readjiraissue.
 		$parser->setFunctionHook( 'readjiraissue', 'JIRAConnector::RenderJIRAIssueStatus' );
-		$parser->setHook( 'jira', 'JIRAConnector::RenderJQL');
+		$parser->setHook( 'jira', 'JIRAConnector::RenderJIRAIssues');
 		
 		// Return true so that MediaWiki continues to load extensions.
 		return true;
@@ -83,7 +83,7 @@ class JIRAConnector {
 	 * @param unknown $parser
 	 * @return multitype:boolean string
 	 */
-	public static function RenderJQL( $text, array $args, Parser $parser, PPFrame $frame ) {
+	public static function RenderJIRAIssues( $text, array $args, Parser $parser, PPFrame $frame ) {
 				
 		//Disable caching for this extension.
 		$parser->disableCache();
@@ -106,7 +106,11 @@ class JIRAConnector {
 			$issueStatus = $jiraIssue["fields"][JIRAConnector::JIRAIssueStatus]["name"];
 			$issueTypeIcon = $jiraIssue["fields"][JIRAConnector::JIRAIssueType]["iconUrl"];
 			$summary = $jiraIssue["fields"][JIRAConnector::JIRAIssueSummary];
-			$output .= "<tr><td><img src=\"$issueTypeIcon\"/></td><td><a href=\"$issueURL\">$issueKey</a></td><td>$summary</td></tr>";
+			$output .= "<tr>";
+			$output .= "<td><img src=\"$issueTypeIcon\"/></td>";
+			$output .= "<td><a href=\"$issueURL\">$issueKey</a></td>";
+			$output .= "<td>$summary</td>";
+			$output .= "</tr>";
 		}
 		$output .= "</tbody></table>";
 
