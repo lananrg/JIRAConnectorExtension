@@ -15,6 +15,8 @@ class JIRAConnector {
 	//Possible field names of JIRA issue.
 	const JIRAIssueKey = "key";
 	const JIRAIssueStatus = "status";
+	const JIRAIssueType = "issuetype";
+	const JIRAIssueSummary = "summary";
 	
 	//JIRA REST API Wrapper.
 	protected static $jiraWrapper = null;
@@ -29,6 +31,7 @@ class JIRAConnector {
 		
 		//Map parser function ReadJIRAIssue to the magic word readjiraissue.
 		$parser->setFunctionHook( 'readjiraissue', 'JIRAConnector::ReadJIRAIssue' );
+		$parser->setHook( 'jira', 'JIRAConnector::ExecuteJQL');
 		
 		// Return true so that MediaWiki continues to load extensions.
 		return true;
@@ -54,9 +57,18 @@ class JIRAConnector {
 		
 		//Get issue data from JIRA.
 		$returnedIssueData = 
-			JIRAConnector::$jiraWrapper->getIssues(array(JIRAConnector::JIRAIssueKey => array($functionParameters[JIRAConnector::parserParameterJIRAKey])),
-									JIRAConnector::JIRAIssueKey,
-									array(JIRAConnector::JIRAIssueKey,JIRAConnector::JIRAIssueStatus));
+			JIRAConnector::$jiraWrapper->getIssues(
+				array(
+					JIRAConnector::JIRAIssueKey => array($functionParameters[JIRAConnector::parserParameterJIRAKey])
+					),
+				"",
+				array(
+					JIRAConnector::JIRAIssueKey,
+					JIRAConnector::JIRAIssueType,
+					JIRAConnector::JIRAIssueStatus,
+					JIRAConnector::JIRAIssueSummary
+					)
+				);
 
 		//Extract status name from the issue data.
 		$output = $returnedIssueData[0]["fields"]["status"]["name"];
@@ -66,6 +78,43 @@ class JIRAConnector {
 		
 	}
 	
+	/**
+	 * Render the output of the tag extension <jira>.
+	 * @param unknown $parser
+	 * @return multitype:boolean string
+	 */
+	public static function ExecuteJQL( $text, array $args, Parser $parser, PPFrame $frame ) {
+				
+		//Disable caching for this extension.
+		$parser->disableCache();
+		
+		//Get issue data from JIRA.
+		$returnedIssueData = 
+			JIRAConnector::$jiraWrapper->getIssuesForJQL($text, array(
+					JIRAConnector::JIRAIssueKey,
+					JIRAConnector::JIRAIssueType,
+					JIRAConnector::JIRAIssueStatus,
+					JIRAConnector::JIRAIssueSummary
+					));
+
+		//Render output.
+		$output =  "<table><tbody>";
+		foreach ($returnedIssueData as $jiraIssue) 
+		{
+			$issueKey = $jiraIssue[JIRAConnector::JIRAIssueKey];
+			$issueURL = $jiraIssue["self"];
+			$issueStatus = $jiraIssue["fields"][JIRAConnector::JIRAIssueStatus]["name"];
+			$issueTypeIcon = $jiraIssue["fields"][JIRAConnector::JIRAIssueType]["iconUrl"];
+			$summary = $jiraIssue["fields"][JIRAConnector::JIRAIssueSummary];
+			$output .= "<tr><td><img src=\"$issueTypeIcon\"/></td><td><a href=\"$issueURL\">$issueKey</a></td><td>$summary</td></tr>";
+		}
+		$output .= "</tbody></table>";
+
+		//Return output and let MediaWiki parse the output.		
+		return array( $output, 'noparse' => true,  'isHTML' => true);
+		
+	}
+
 	/**
 	 * Converts an array of values in form [0] => "name=value" into a real
 	 * associative array in form [name] => value
@@ -166,55 +215,60 @@ class JIRARestApiWrapper{
 	 * This function returns issues which fullfill defined filter criteria from a JIRA system.
 	 * @param $filterCriteria filter criteria for returned issues. Only issues which fullfill this criteria will be returned.
 	 * 			The format of the filter criteria is following ["field name"][]="fieldvalue"	
-	 * @param $orderIssuesBy Can contain the name of the field by which returned issues should be sorted.
-	 * @param $fieldList Can contain filed names of the fileds which should be returned whith each returned issues.
+	 * @param $orderIssuesBy field name by which the returned issues should be ordered.
+	 * @param $fieldNames a list of field names of the fields which should be returned for each issue.
 	 */
-	public function getIssues( $filterCriteria, $orderIssuesBy, $fieldList ){
+	public function getIssues( $filterCriteria, $orderIssuesBy, $fieldNames ){
+		
+		//Concatenate filter criteria.
+		$jql = "";
+		$filterCriteriaKeys = array_keys($filterCriteria);
+		foreach ( $filterCriteriaKeys as $filterCriteriaKey ){
+			$jql = $jql . $filterCriteriaKey . "=" . $filterCriteria[$filterCriteriaKey][0];
+		}
+		
+		//Set order by.
+		if ($orderIssuesBy != "" && $jql != "") {
+			$jql = $jql . "+" . "order+by+" . $orderIssuesBy;
+		}
+		
+		//Get data from JIRA system.
+		$restQueryResult = $this->getIssuesForJQL($jql, $fieldNames);
+		
+		return $restQueryResult;
+		
+	}
+	
+	/**
+	 * This function returns issues which fullfill the JQL from a JIRA system.
+	 * @param $jql the JIRA Query Language request to execute
+	 * @param $fieldNames a list of field names of the fields which should be returned for each issue.
+	 */
+	public function getIssuesForJQL( $jql, $fieldNames ) {
 		
 		//Base url for query data.
 		$dataURL = "/rest/api/2/search";
 		
-		//Based on importing parameter build data url.
-		
-		//Concatenate filter criteria.
-		$filterCriteriaString = "";
-		$filterCriteriaKeys = array_keys($filterCriteria);
-		foreach ( $filterCriteriaKeys as $filterCriteriaKey ){
-			if ($filterCriteriaString != "") {
-				$filterCriteriaString = $filterCriteriaString . "&";
-			}else{
-				$filterCriteriaString = "?jql=";
+		//Set which fields of each issue have to be returned.
+		$fieldsQueryParamValue = "";
+		foreach ( $fieldNames as $fieldName ){
+			if ($fieldsQueryParamValue != "") {
+				$fieldsQueryParamValue = $fieldsQueryParamValue . ",";
 			}
-			$filterCriteriaString = $filterCriteriaString . $filterCriteriaKey . "=" . $filterCriteria[$filterCriteriaKey][0];
+			$fieldsQueryParamValue = $fieldsQueryParamValue . $fieldName;
 		}
-		
-		//Set order by.
-		if ($orderIssuesBy != "" && $filterCriteriaString != "") {
-			$filterCriteriaString = $filterCriteriaString . "+" . "order+by+" . $orderIssuesBy;
+
+	
+		$queryString = "";
+		if ($jql != "") {
+			$queryString = "jql=" . urlencode($jql);
 		}
-		
-		//Set which fileds of each issue have to be returned.
-		$fieldListString = "";
-		foreach ( $fieldList as $issueField ){
-			if ($fieldListString != "") {
-				$fieldListString = $fieldListString . ",";
-			}else{
-				$fieldListString = "fields=";
-			}
-			$fieldListString = $fieldListString . $issueField;
+		if ($fieldsQueryParamValue != "") {
+			$queryString = $queryString . "&fields=" . $fieldsQueryParamValue;	
 		}
-		
-		//Complete dataURL.
-		if ($fieldListString != "") {
-			if ($filterCriteriaString != "") {
-				$dataURL = $dataURL . $filterCriteriaString . "&" . $fieldListString;
-			}else{
-				$dataURL = $dataURL . "?" . $fieldListString;
-			}
-		}else{
-			$dataURL = $dataURL . $filterCriteriaString;
-		}
-		
+
+		$dataURL = $dataURL . "?" . $queryString;
+
 		//Get data from JIRA system.
 		$restQueryResult = $this->getRESTData($dataURL);
 		
@@ -222,7 +276,6 @@ class JIRARestApiWrapper{
 		return $restQueryResult["issues"];
 		
 	}
-	
 }
 
 
