@@ -30,8 +30,8 @@ class JIRAConnector {
 		JIRAConnector::$jiraWrapper = new JIRARestApiWrapper($jiraURL,$jiraUsername,$jiraPassword);
 		
 		//Map parser function ReadJIRAIssue to the magic word readjiraissue.
-		$parser->setFunctionHook( 'readjiraissue', 'JIRAConnector::ReadJIRAIssue' );
-		$parser->setHook( 'jira', 'JIRAConnector::ExecuteJQL');
+		$parser->setFunctionHook( 'readjiraissue', 'JIRAConnector::RenderJIRAIssueStatus' );
+		$parser->setHook( 'jira', 'JIRAConnector::RenderJQL');
 		
 		// Return true so that MediaWiki continues to load extensions.
 		return true;
@@ -43,7 +43,7 @@ class JIRAConnector {
 	 * @param unknown $parser
 	 * @return multitype:boolean string
 	 */
-	public static function ReadJIRAIssue( $parser ) {
+	public static function RenderJIRAIssueStatus( $parser ) {
 				
 		//Disable caching for this extension.
 		$parser->disableCache();
@@ -83,7 +83,7 @@ class JIRAConnector {
 	 * @param unknown $parser
 	 * @return multitype:boolean string
 	 */
-	public static function ExecuteJQL( $text, array $args, Parser $parser, PPFrame $frame ) {
+	public static function RenderJQL( $text, array $args, Parser $parser, PPFrame $frame ) {
 				
 		//Disable caching for this extension.
 		$parser->disableCache();
