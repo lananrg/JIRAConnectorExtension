@@ -31,12 +31,12 @@ Navigate to "*Special:Version*" on your wiki to verify that the extension is suc
 
 Using the demo JIRA instance of Atlassian that you can find here: https://jira.atlassian.com
 
-# How to get a status of a JIRA issue "DEMO-1"
+### How to get a status of a JIRA issue "DEMO-1"
 Paste the following line to your wiki page:
 
 {{#readjiraissue:jiraissuekey=DEMO-1}}
 
-# How to get a list of of resolved JIRA issues from the project DEMO
+### How to get a list of of resolved JIRA issues from the project DEMO
 Paste the following line to your wiki page:
 
 `<jira>project=DEMO and status=Resolved</jira>`
