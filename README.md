@@ -1,7 +1,11 @@
 JIRAConnectorExtension
 ======================
 
-This extension can be used to request data from JIRA and transfer it to MediaWiki. It uses the new JIRA REST API.
+This extension can be used to request data from JIRA and transfer it to MediaWiki. It uses the new JIRA REST API `/rest/api/2/search`.
+
+The extension provides:
+* a parser function extension to retrieve the status of a JIRA issue: `{{#readjiraissue:jiraissuekey=DEMO-1}}`
+* a tag extension to retrieve a list of JIRA issues using JQL: `<jira>project=DEMO and status=Resolved</jira>`
 
 # Installation
 Download and extract the file(s) in a directory called JIRAConnector in your `extensions/` folder. 
