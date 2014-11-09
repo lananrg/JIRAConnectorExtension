@@ -9,7 +9,7 @@ The extension provides:
 * a tag extension to retrieve a list of JIRA issues using JQL: 
 `<jira>project=DEMO and status=Resolved</jira>`
 
-# Installation
+## Installation
 Download and extract the file(s) in a directory called JIRAConnector in your `extensions/` folder. 
 
 Add the following code at the bottom of your `LocalSettings.php`:
@@ -27,7 +27,16 @@ Done!
 
 Navigate to "*Special:Version*" on your wiki to verify that the extension is successfully installed.
 
-# Usage
-How to get a status of a JIRA issue "DEMO-1"
-Paste the following code to a wiki page and change the JIRA issue key to a valid key of your JIRA programm:
+## Usage
+
+Using the demo JIRA instance of Atlassian that you can find here: https://jira.atlassian.com
+
+# How to get a status of a JIRA issue "DEMO-1"
+Paste the following line to your wiki page:
+
 {{#readjiraissue:jiraissuekey=DEMO-1}}
+
+# How to get a list of of resolved JIRA issues from the project DEMO
+Paste the following line to your wiki page:
+
+`<jira>project=DEMO and status=Resolved</jira>`
