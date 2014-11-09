@@ -34,7 +34,7 @@ Using the demo JIRA instance of Atlassian that you can find here: https://jira.a
 ### How to get a status of a JIRA issue "DEMO-1"
 Paste the following line to your wiki page:
 
-{{#readjiraissue:jiraissuekey=DEMO-1}}
+`{{#readjiraissue:jiraissuekey=DEMO-1}}`
 
 ### How to get a list of of resolved JIRA issues from the project DEMO
 Paste the following line to your wiki page:
