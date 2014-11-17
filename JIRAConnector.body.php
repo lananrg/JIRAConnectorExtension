@@ -84,7 +84,9 @@ class JIRAConnector {
 	 * @return multitype:boolean string
 	 */
 	public static function RenderJIRAIssues( $text, array $args, Parser $parser, PPFrame $frame ) {
-				
+		
+		global $jiraURL;		
+
 		//Disable caching for this extension.
 		$parser->disableCache();
 		
@@ -108,7 +110,7 @@ class JIRAConnector {
 			$summary = $jiraIssue["fields"][JIRAConnector::JIRAIssueSummary];
 			$output .= "<tr>";
 			$output .= "<td><img src=\"$issueTypeIcon\"/></td>";
-			$output .= "<td><a href=\"$issueURL\">";
+			$output .= "<td><a href=\"$jiraURL/browse/$issueKey\">";
 			if ($issueStatus == "Resolved") {
 				$output .= "<strike>"	;
 			}
